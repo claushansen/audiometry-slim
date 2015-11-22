@@ -133,7 +133,7 @@ EOT;
     }
 );
 //henter alle brugere
-$app->get('/users',
+$app->get('/api/users',
     function () {
         $sql = "SELECT id,firstName,lastName FROM a_patient ORDER BY id DESC";
         try {
@@ -151,7 +151,7 @@ $app->get('/users',
 );
 
 //henter en bruger efter id
-$app->get('/users/:userid',
+$app->get('/api/users/:userid',
     function ($userid) {
         $sql = "SELECT id,firstName,lastName FROM a_patient  WHERE id = ".$userid ;
         try {
@@ -168,50 +168,9 @@ $app->get('/users/:userid',
     }
 );
 
-//henter alle testresultater
-$app->get('/results(/:limit(/:offset))',
-    function ($limit = 20 , $offset = 0) {
-
-        $sql = "SELECT * FROM a_journal ORDER BY a_journal.date DESC LIMIT ".$offset. ",".$limit;
-        try {
-        $db = getDB();
-        $stmt = $db->query($sql); 
-        $testresults = $stmt->fetchAll(PDO::FETCH_OBJ);
-        
-        //For hver journal henter vi de tilhørende resultater af testen med et nyt kald til databasen
-
-        foreach ($testresults as $key => $value) {
-                //starter med at skrive starten af vores JSON object
-                echo '{"journalid": "'.$value->id . '","patientId": "' . $value->patientId.'"'. '","journaldate": "' . date('Y-m-d H:i:s', $value->date).'"';
-                //Henter vores testresultater med et nyt databasekald
-                $sql = "SELECT ear, frequence,decibel FROM a_journalpoints WHERE journalId = ".$value->id. " ORDER BY ear,frequence";
-                try {
-                
-                    $stmt = $db->query($sql); 
-                    $resultset = $stmt->fetchAll(PDO::FETCH_OBJ);
-                    //skriver vores resultatsæt i vores JSON object
-                     echo count($testresults) ? '{ "data": ' . json_encode($testresults) . '}' : '{"error":{"text": "No Results"}}';
-                }
-                catch(PDOException $e) {
-                //error_log($e->getMessage(), 3, '/var/tmp/phperror.log'); //Write error log
-                echo '{"error":{"text":'. $e->getMessage() .'}}';
-                }
-                // Afslutter vores JSON object
-                echo '}';
-
-            }
- 
-        } catch(PDOException $e) {
-        //error_log($e->getMessage(), 3, '/var/tmp/phperror.log'); //Write error log
-        echo '{"error":{"text":'. $e->getMessage() .'}}';
-        }
-        $db = null;
-        
-    }
-);
 
 //henter alle testresultater
-$app->get('/journals(/:limit(/:offset))',
+$app->get('/api/journals(/:limit(/:offset))',
     function ($limit = 20 , $offset = 0) {
 
         $sql = "SELECT * FROM a_journal ORDER BY a_journal.date DESC LIMIT ".$offset. ",".$limit;
@@ -251,7 +210,7 @@ $app->get('/journals(/:limit(/:offset))',
 );
 
 //henter et enkelt testresultat
-$app->get('/journal/:journalid',
+$app->get('/api/journal/:journalid',
     function ($journalid) {
 
         $sql = "SELECT * FROM a_journal WHERE id = ". $journalid;
@@ -291,7 +250,7 @@ $app->get('/journal/:journalid',
 );
 
 //henter alle testresultater per bruger
-$app->get('/user/journals/:userid',
+$app->get('/api/user/journals/:userid',
     function ($userid) {
 
         $sql = "SELECT * FROM a_journal WHERE patientId = ". $userid. " ORDER BY a_journal.date DESC ";
